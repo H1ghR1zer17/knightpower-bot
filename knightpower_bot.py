@@ -36,7 +36,7 @@ async def on_ready():
 
 # ───── Slash Commands ─────
 
-@bot.tree.command(name="statePower", description="Calculate total SP potential from current SP and stats")
+@bot.tree.command(name="statepower", description="Calculate total SP potential from current SP and stats")
 @app_commands.describe(
     current_sp="Your current state power",
     talent_stars="Number of talent stars",
