@@ -81,21 +81,19 @@ async def lover_greeting(interaction: discord.Interaction, charm: float):
     result = calc_lover_greeting(charm)
     await interaction.response.send_message(f"Greeting Lover Power: {result:.2f}")
 
-@bot.tree.command(name="knight", description="Calculate power using knight name, level, book bonus, and SP values")
+@bot.tree.command(name="knight", description="Calculate power using knight name, level, book bonus, and current SP")
 @app_commands.describe(
     name="Select a knight",
     level="Knight's level",
     book_bonus="Book bonus value",
-    current_sp="Your current total state power",
-    sp="Manual SP input (optional)"
+    current_sp="Your current total state power"
 )
 async def knight(
     interaction: discord.Interaction,
     name: str,
     level: float,
     book_bonus: float,
-    current_sp: float,
-    sp: float
+    current_sp: float
 ):
     key = name.lower()
     if key not in KNIGHT_MAP:
@@ -109,7 +107,6 @@ async def knight(
     await interaction.response.send_message(
         f"**{name}** — Stars: {stars}, Level: {level}, Book Bonus: {book_bonus}\n"
         f"Calculated SP: {calculated_sp:.2f}\n"
-        f"Manual SP Input: {sp:.2f}\n"
         f"Current SP: {current_sp:.2f}\n"
         f"**SP Potential:** {potential_sp:.2f}"
     )
