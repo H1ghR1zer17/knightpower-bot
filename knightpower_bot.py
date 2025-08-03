@@ -1,4 +1,3 @@
-
 import os
 import json
 import discord
@@ -12,9 +11,12 @@ from knightpower_calc import (
     lover_greeting as calc_lover_greeting,
 )
 
-# Load Knight list JSON
+# Load knight data
 with open("knight_list.json", "r") as f:
-    KNIGHT_MAP = {entry["name"].lower(): entry["stars"] for entry in json.load(f)}
+    KNIGHT_LIST = json.load(f)
+
+KNIGHT_MAP = {entry["name"].lower(): entry["stars"] for entry in KNIGHT_LIST}
+KNIGHT_NAMES = [entry["name"] for entry in KNIGHT_LIST]
 
 # Bot setup
 intents = discord.Intents.default()
@@ -25,7 +27,8 @@ async def on_ready():
     await bot.tree.sync()
     print(f"{bot.user} is online with slash commands.")
 
-# Slash Commands
+# Commands
+
 @bot.tree.command(name="state_power", description="Calculate Knight State Power")
 @app_commands.describe(talent_stars="Number of talent stars", knight_level="Knight's level", book_bonus="Book bonus value")
 async def state_power(interaction: discord.Interaction, talent_stars: float, knight_level: float, book_bonus: float):
@@ -50,8 +53,8 @@ async def lover_greeting(interaction: discord.Interaction, charm: float):
     result = calc_lover_greeting(charm)
     await interaction.response.send_message(f"Greeting Lover Power: {result:.2f}")
 
-@bot.tree.command(name="knight", description="Calculate power using saved knight name, level, and book bonus")
-@app_commands.describe(name="Knight's name", level="Knight's level", book_bonus="Book bonus")
+@bot.tree.command(name="knight", description="Calculate power using knight name + your level and book bonus")
+@app_commands.describe(name="Select a knight", level="Knight's level", book_bonus="Book bonus")
 async def knight(interaction: discord.Interaction, name: str, level: float, book_bonus: float):
     key = name.lower()
     if key not in KNIGHT_MAP:
@@ -64,7 +67,17 @@ async def knight(interaction: discord.Interaction, name: str, level: float, book
         f"**{name}** — Stars: {stars}, Level: {level}, Book Bonus: {book_bonus}\n**State Power:** {result:.2f}"
     )
 
-# Start bot
+# Autocomplete for knight name
+@knight.autocomplete("name")
+async def knight_name_autocomplete(interaction: discord.Interaction, current: str):
+    matches = [
+        app_commands.Choice(name=name, value=name)
+        for name in KNIGHT_NAMES
+        if current.lower() in name.lower()
+    ]
+    return matches[:25]
+
+# Run the bot
 bot_token = os.getenv("BOT_TOKEN")
 if not bot_token:
     print("Error: BOT_TOKEN environment variable not set.")
