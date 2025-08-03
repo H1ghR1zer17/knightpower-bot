@@ -24,10 +24,10 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
-    print(f"{bot.user} is online with slash commands.")
+    synced = await bot.tree.sync()
+    print(f"{bot.user} is online with {len(synced)} slash commands.")
 
-# Commands
+# Slash commands
 
 @bot.tree.command(name="state_power", description="Calculate Knight State Power")
 @app_commands.describe(talent_stars="Number of talent stars", knight_level="Knight's level", book_bonus="Book bonus value")
@@ -53,18 +53,37 @@ async def lover_greeting(interaction: discord.Interaction, charm: float):
     result = calc_lover_greeting(charm)
     await interaction.response.send_message(f"Greeting Lover Power: {result:.2f}")
 
-@bot.tree.command(name="knight", description="Calculate power using knight name + your level and book bonus")
-@app_commands.describe(name="Select a knight", level="Knight's level", book_bonus="Book bonus")
-async def knight(interaction: discord.Interaction, name: str, level: float, book_bonus: float):
+@bot.tree.command(name="knight", description="Calculate power using knight name, level, book bonus, and SP values")
+@app_commands.describe(
+    name="Select a knight",
+    level="Knight's level",
+    book_bonus="Book bonus value",
+    current_sp="Your current total state power",
+    sp="Manual SP input (optional)"
+)
+async def knight(
+    interaction: discord.Interaction,
+    name: str,
+    level: float,
+    book_bonus: float,
+    current_sp: float,
+    sp: float
+):
     key = name.lower()
     if key not in KNIGHT_MAP:
         await interaction.response.send_message(f"Knight '{name}' not found.")
         return
 
     stars = KNIGHT_MAP[key]
-    result = calc_state_power(stars, level, book_bonus)
+    calculated_sp = calc_state_power(stars, level, book_bonus)
+    potential_sp = current_sp + calculated_sp
+
     await interaction.response.send_message(
-        f"**{name}** — Stars: {stars}, Level: {level}, Book Bonus: {book_bonus}\n**State Power:** {result:.2f}"
+        f"**{name}** — Stars: {stars}, Level: {level}, Book Bonus: {book_bonus}\n"
+        f"Calculated SP: {calculated_sp:.2f}\n"
+        f"Manual SP Input: {sp:.2f}\n"
+        f"Current SP: {current_sp:.2f}\n"
+        f"**SP Potential:** {potential_sp:.2f}"
     )
 
 # Autocomplete for knight name
