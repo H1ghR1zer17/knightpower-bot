@@ -3,6 +3,7 @@ import json
 import discord
 from discord.ext import commands
 from discord import app_commands
+from math import sqrt
 
 from knightpower_calc import (
     state_power as calc_state_power,
@@ -11,9 +12,16 @@ from knightpower_calc import (
     lover_greeting as calc_lover_greeting,
 )
 
-# Load knight data
-with open("knight_list.json", "r") as f:
-    KNIGHT_LIST = json.load(f)
+# Load knight_list.json using an absolute path
+try:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(base_dir, "knight_list.json")
+    with open(file_path, "r") as f:
+        KNIGHT_LIST = json.load(f)
+        print(f"✅ Loaded {len(KNIGHT_LIST)} knights from {file_path}")
+except Exception as e:
+    print(f"❌ Failed to load knight_list.json: {e}")
+    KNIGHT_LIST = []
 
 KNIGHT_MAP = {entry["name"].lower(): entry["stars"] for entry in KNIGHT_LIST}
 KNIGHT_NAMES = [entry["name"] for entry in KNIGHT_LIST]
@@ -25,18 +33,25 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 @bot.event
 async def on_ready():
     synced = await bot.tree.sync()
-    print(f"{bot.user} is online with {len(synced)} slash commands.")
+    print(f"✅ {bot.user} is online with {len(synced)} slash commands.")
 
-# Slash commands
+# ───── Slash Commands ─────
 
 @bot.tree.command(name="state_power", description="Calculate Knight State Power")
-@app_commands.describe(talent_stars="Number of talent stars", knight_level="Knight's level", book_bonus="Book bonus value")
+@app_commands.describe(
+    talent_stars="Number of talent stars",
+    knight_level="Knight's level",
+    book_bonus="Book bonus value"
+)
 async def state_power(interaction: discord.Interaction, talent_stars: float, knight_level: float, book_bonus: float):
     result = calc_state_power(talent_stars, knight_level, book_bonus)
     await interaction.response.send_message(f"State Power: {result:.2f}")
 
 @bot.tree.command(name="talent_bonus", description="Calculate Knight Talent Bonus")
-@app_commands.describe(talent_stars="Number of talent stars", level="Knight's level")
+@app_commands.describe(
+    talent_stars="Number of talent stars",
+    level="Knight's level"
+)
 async def talent_bonus(interaction: discord.Interaction, talent_stars: float, level: int):
     result = calc_talent_bonus(talent_stars, level)
     await interaction.response.send_message(f"Knight Talent Bonus: {result:.2f}")
@@ -86,7 +101,7 @@ async def knight(
         f"**SP Potential:** {potential_sp:.2f}"
     )
 
-# Autocomplete for knight name
+# Autocomplete for /knight
 @knight.autocomplete("name")
 async def knight_name_autocomplete(interaction: discord.Interaction, current: str):
     matches = [
@@ -96,9 +111,9 @@ async def knight_name_autocomplete(interaction: discord.Interaction, current: st
     ]
     return matches[:25]
 
-# Run the bot
+# ───── Run Bot ─────
 bot_token = os.getenv("BOT_TOKEN")
 if not bot_token:
-    print("Error: BOT_TOKEN environment variable not set.")
+    print("❌ BOT_TOKEN not found in environment variables.")
 else:
     bot.run(bot_token)
