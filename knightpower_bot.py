@@ -3,7 +3,6 @@ import json
 import discord
 from discord.ext import commands
 from discord import app_commands
-from math import sqrt
 
 from knightpower_calc import (
     state_power as calc_state_power,
@@ -12,7 +11,7 @@ from knightpower_calc import (
     lover_greeting as calc_lover_greeting,
 )
 
-# Load knight_list.json using an absolute path
+# Load knight data from JSON using absolute path
 try:
     base_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(base_dir, "knight_list.json")
@@ -37,15 +36,29 @@ async def on_ready():
 
 # ───── Slash Commands ─────
 
-@bot.tree.command(name="state_power", description="Calculate Knight State Power")
+@bot.tree.command(name="state_power", description="Calculate total SP potential from current SP and stats")
 @app_commands.describe(
+    current_sp="Your current state power",
     talent_stars="Number of talent stars",
     knight_level="Knight's level",
     book_bonus="Book bonus value"
 )
-async def state_power(interaction: discord.Interaction, talent_stars: float, knight_level: float, book_bonus: float):
+async def state_power(
+    interaction: discord.Interaction,
+    current_sp: float,
+    talent_stars: float,
+    knight_level: float,
+    book_bonus: float
+):
     result = calc_state_power(talent_stars, knight_level, book_bonus)
-    await interaction.response.send_message(f"State Power: {result:.2f}")
+    potential = current_sp + result
+
+    await interaction.response.send_message(
+        f"Current SP: {current_sp:.2f}\n"
+        f"Stars: {talent_stars}, Level: {knight_level}, Book Bonus: {book_bonus}\n"
+        f"Calculated SP: {result:.2f}\n"
+        f"**SP Potential:** {potential:.2f}"
+    )
 
 @bot.tree.command(name="talent_bonus", description="Calculate Knight Talent Bonus")
 @app_commands.describe(
