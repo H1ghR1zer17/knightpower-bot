@@ -27,6 +27,7 @@ KNIGHT_NAMES = [entry["name"] for entry in KNIGHT_LIST]
 
 # Bot setup
 intents = discord.Intents.default()
+intents.message_content = True  # Add this line
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
